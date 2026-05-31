@@ -9,6 +9,6 @@ export const SITE_FACTORY_RECIPE: SiteFactoryRecipe = {
   primaryTask: 'classified',
   enabledTasks: ["classified"],
   taskLayouts: {
-    classified: 'classified-grid',
+    classified: 'classified-bulletin',
   },
 }
