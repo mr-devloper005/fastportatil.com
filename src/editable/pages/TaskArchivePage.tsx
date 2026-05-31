@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { CSSProperties } from 'react'
-import { ArrowRight, Bookmark, BriefcaseBusiness, Building2, Camera, Download, FileText, Filter, Image as ImageIcon, MapPin, Megaphone, Search, UserRound } from 'lucide-react'
+import { ArrowRight, Bookmark, BriefcaseBusiness, Building2, Camera, CheckCircle2, Clock3, Download, FileText, Filter, Image as ImageIcon, MapPin, Megaphone, Search, ShieldCheck, UserRound, Zap } from 'lucide-react'
 import { buildTaskMetadata } from '@/lib/seo'
 import { CATEGORY_OPTIONS, normalizeCategory } from '@/lib/categories'
 import { fetchPaginatedTaskPosts, buildPostUrl } from '@/lib/task-data'
@@ -57,7 +57,7 @@ function pageHref(basePath: string, category: string, page: number) {
 const taskDeck: Record<TaskKey, { icon: typeof FileText; archiveClass: string; promise: string; badge: string }> = {
   article: { icon: FileText, archiveClass: 'grid gap-5 md:grid-cols-2 xl:grid-cols-3', promise: 'Readable editorial cards with room for headlines and excerpts.', badge: 'Read' },
   listing: { icon: Building2, archiveClass: 'grid gap-5 xl:grid-cols-2', promise: 'Directory cards highlight company identity, location, contacts, and service details.', badge: 'Business' },
-  classified: { icon: Megaphone, archiveClass: 'grid gap-5 xl:grid-cols-2', promise: 'Offer-board cards prioritize price, location, condition, and quick action.', badge: 'Offer' },
+  classified: { icon: Megaphone, archiveClass: 'grid gap-5 md:grid-cols-2 xl:grid-cols-3', promise: 'Offer-board cards prioritize price, location, condition, and quick action.', badge: 'Offer' },
   image: { icon: Camera, archiveClass: 'columns-1 gap-5 space-y-5 md:columns-2 xl:columns-3', promise: 'Gallery-first browsing with strong visuals and compact captions.', badge: 'Gallery' },
   sbm: { icon: Bookmark, archiveClass: 'grid gap-4 md:grid-cols-2 xl:grid-cols-3', promise: 'Bookmark cards stay mostly text-based so saved resources scan quickly.', badge: 'Bookmark' },
   pdf: { icon: Download, archiveClass: 'grid gap-5 md:grid-cols-2 xl:grid-cols-3', promise: 'Document cards surface file context, download intent, and summary.', badge: 'PDF' },
@@ -91,34 +91,53 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
   const Icon = deck.icon
   const archiveVars = { '--archive-bg': preset.colors.background, '--archive-text': preset.colors.foreground, '--archive-surface': preset.colors.surface, '--archive-accent': preset.colors.accent } as CSSProperties
   const categoryLabel = category === 'all' ? 'All categories' : CATEGORY_OPTIONS.find((item) => item.slug === category)?.name || category
+  const isClassified = task === 'classified'
 
   return (
     <EditableSiteShell>
       <main style={archiveVars} className="bg-[var(--archive-bg)] text-[var(--archive-text)]">
-        <section className="mx-auto grid max-w-[var(--editable-container)] gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-20">
-          <div className="rounded-[2.5rem] border border-[var(--editable-border)] bg-[var(--archive-surface)] p-7 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--editable-border)] bg-white/70 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[var(--archive-accent)]"><Icon className="h-4 w-4" /> {label}</div>
-            <h1 className="mt-5 max-w-4xl text-5xl font-black leading-[0.95] tracking-[-0.07em] sm:text-6xl">{voice?.headline || `Browse ${label}`}</h1>
-            <p className="mt-6 max-w-2xl text-base leading-8 opacity-70">{voice?.description || SITE_CONFIG.description}</p>
-            <div className="mt-6 rounded-[1.5rem] border border-[var(--editable-border)] bg-white/55 p-4 text-sm font-bold leading-7 opacity-75">{deck.promise}</div>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href={basePath} className="rounded-full bg-[var(--archive-text)] px-5 py-3 text-sm font-black text-[var(--archive-bg)]">Browse all</Link>
-              <Link href="/search" className="rounded-full border border-[var(--editable-border)] px-5 py-3 text-sm font-black">Search posts</Link>
+        <section className={isClassified ? 'bg-[#111820] text-white' : ''}>
+          <div className={`mx-auto grid max-w-[var(--editable-container)] gap-8 px-4 py-12 sm:px-6 lg:px-8 ${isClassified ? 'lg:grid-cols-[1fr_380px] lg:py-16' : 'lg:grid-cols-[1.05fr_0.95fr] lg:py-20'}`}>
+            <div className={isClassified ? 'relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#18212b] p-7 shadow-[0_28px_90px_rgba(0,0,0,0.22)] sm:p-10' : 'rounded-[2.5rem] border border-[var(--editable-border)] bg-[var(--archive-surface)] p-7 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-10'}>
+              {isClassified ? <div className="absolute inset-x-0 top-0 h-2 bg-[linear-gradient(90deg,#ff3b18,#ff9d00,#0ba7ff)]" /> : null}
+              <div className={isClassified ? 'inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[#9edcff]' : 'inline-flex items-center gap-2 rounded-full border border-[var(--editable-border)] bg-white/70 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[var(--archive-accent)]'}><Icon className="h-4 w-4" /> {label}</div>
+              <h1 className={`mt-5 max-w-4xl font-black leading-[0.95] tracking-[-0.07em] ${isClassified ? 'text-5xl sm:text-7xl' : 'text-5xl sm:text-6xl'}`}>{isClassified ? 'Deals, notices, and quick offers in motion.' : voice?.headline || `Browse ${label}`}</h1>
+              <p className={`mt-6 max-w-2xl text-base leading-8 ${isClassified ? 'text-white/70' : 'opacity-70'}`}>{voice?.description || SITE_CONFIG.description}</p>
+              {isClassified ? (
+                <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                  {[
+                    { icon: Zap, label: 'Fast scan' },
+                    { icon: ShieldCheck, label: 'Clear signals' },
+                    { icon: Clock3, label: 'Fresh intent' },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.07] p-4">
+                      <item.icon className="h-5 w-5 text-[#ff9d00]" />
+                      <p className="mt-3 text-sm font-black uppercase tracking-[0.16em] text-white/72">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-6 rounded-[1.5rem] border border-[var(--editable-border)] bg-white/55 p-4 text-sm font-bold leading-7 opacity-75">{deck.promise}</div>
+              )}
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href={basePath} className={isClassified ? 'rounded-full bg-white px-5 py-3 text-sm font-black text-[#111820]' : 'rounded-full bg-[var(--archive-text)] px-5 py-3 text-sm font-black text-[var(--archive-bg)]'}>Browse all</Link>
+                <Link href="/search" className={isClassified ? 'rounded-full border border-white/20 px-5 py-3 text-sm font-black text-white' : 'rounded-full border border-[var(--editable-border)] px-5 py-3 text-sm font-black'}>Search posts</Link>
+              </div>
             </div>
-          </div>
 
-          <form action={basePath} className="self-end rounded-[2rem] border border-[var(--editable-border)] bg-white/70 p-5 shadow-sm backdrop-blur">
-            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] opacity-55"><Filter className="h-4 w-4" /> Filter</div>
-            <select name="category" defaultValue={category} className="mt-4 h-12 w-full rounded-2xl border border-[var(--editable-border)] bg-white px-4 text-sm font-bold outline-none">
-              <option value="all">All categories</option>
-              {CATEGORY_OPTIONS.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}
-            </select>
-            <button className="mt-3 h-12 w-full rounded-2xl bg-[var(--archive-text)] text-sm font-black text-[var(--archive-bg)]">Apply</button>
-            <p className="mt-3 text-xs font-bold opacity-55">Showing: {categoryLabel}</p>
-          </form>
+            <form action={basePath} className={isClassified ? 'self-end rounded-[2rem] border border-white/10 bg-white p-5 text-[#111820] shadow-[0_24px_70px_rgba(0,0,0,0.16)]' : 'self-end rounded-[2rem] border border-[var(--editable-border)] bg-white/70 p-5 shadow-sm backdrop-blur'}>
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] opacity-55"><Filter className="h-4 w-4" /> Filter</div>
+              <select name="category" defaultValue={category} className="mt-4 h-12 w-full rounded-2xl border border-[var(--editable-border)] bg-white px-4 text-sm font-bold outline-none">
+                <option value="all">All categories</option>
+                {CATEGORY_OPTIONS.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}
+              </select>
+              <button className={isClassified ? 'mt-3 h-12 w-full rounded-2xl bg-[#111820] text-sm font-black text-white' : 'mt-3 h-12 w-full rounded-2xl bg-[var(--archive-text)] text-sm font-black text-[var(--archive-bg)]'}>Apply</button>
+              <p className="mt-3 text-xs font-bold opacity-55">Showing: {categoryLabel}</p>
+            </form>
+          </div>
         </section>
 
-        <section className="mx-auto max-w-[var(--editable-container)] px-4 pb-16 sm:px-6 lg:px-8">
+        <section className={`mx-auto max-w-[var(--editable-container)] px-4 pb-16 sm:px-6 lg:px-8 ${isClassified ? 'pt-10' : ''}`}>
           {posts.length ? (
             <div className={deck.archiveClass}>
               {posts.map((post, index) => <ArchivePostCard key={post.id || post.slug} post={post} task={task} basePath={basePath} index={index} />)}
@@ -203,19 +222,35 @@ function ClassifiedArchiveCard({ post, href }: { post: SitePost; href: string })
   const location = getField(post, ['location', 'address', 'city'])
   const condition = getField(post, ['condition', 'type', 'availability'])
   return (
-    <Link href={href} className="group overflow-hidden rounded-[2rem] border border-[var(--editable-border)] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-      <div className="grid min-h-64 sm:grid-cols-[0.72fr_1fr]">
-        <div className="relative bg-[var(--archive-text)] p-5 text-[var(--archive-bg)]">
-          <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em]">Classified</span>
-          <h2 className="mt-10 text-3xl font-black leading-[1] tracking-[-0.07em]">{price || 'Open offer'}</h2>
-          <p className="mt-4 text-sm font-bold opacity-75">{location || condition || 'Details inside'}</p>
-          {image ? <img src={image} alt="" className="absolute bottom-4 right-4 h-20 w-20 rounded-2xl object-cover opacity-80" /> : null}
+    <Link href={href} className="group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-black/10 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(17,24,32,0.12)]">
+      <div className="relative aspect-[16/11] overflow-hidden bg-[#111820]">
+        <div className="absolute inset-x-0 top-0 z-10 h-1.5 bg-[linear-gradient(90deg,#ff3b18,#ff9d00,#0ba7ff)]" />
+        {image ? (
+          <img src={image} alt="" className="h-full w-full object-cover opacity-88 transition duration-500 group-hover:scale-105" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-white/35">
+            <Megaphone className="h-12 w-12" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#111820] via-[#111820]/20 to-transparent" />
+        <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#111820]">
+          <CheckCircle2 className="h-3 w-3 text-[#c55a2e]" />
+          Classified
+        </span>
+        <div className="absolute bottom-4 left-4 right-4">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-white/62">Asking</p>
+          <h2 className="mt-1 text-3xl font-black leading-[1] tracking-[-0.06em] text-white">{price || 'Open offer'}</h2>
         </div>
-        <div className="p-6">
-          <h2 className="text-2xl font-black leading-tight tracking-[-0.05em]">{post.title}</h2>
-          <p className="mt-4 line-clamp-4 text-sm leading-6 opacity-65">{getSummary(post)}</p>
-          <p className="mt-6 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-[var(--archive-accent)]">View listing <ArrowRight className="h-4 w-4" /></p>
+      </div>
+      <div className="flex flex-1 flex-col p-5">
+        <h2 className="line-clamp-2 text-xl font-black leading-tight tracking-[-0.045em] text-[#1f1714]">{post.title}</h2>
+        <p className="mt-3 line-clamp-3 text-sm leading-6 text-[#695f5a]">{getSummary(post)}</p>
+        <div className="mt-5 flex flex-wrap gap-2">
+          {location ? <span className="rounded-full bg-[#f4f0e8] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#4f4039]">{location}</span> : null}
+          {condition ? <span className="rounded-full bg-[#f4f0e8] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#4f4039]">{condition}</span> : null}
+          {!location && !condition ? <span className="rounded-full bg-[#f4f0e8] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#4f4039]">Details inside</span> : null}
         </div>
+        <p className="mt-auto pt-5 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-[#c55a2e]">View listing <ArrowRight className="h-4 w-4" /></p>
       </div>
     </Link>
   )
