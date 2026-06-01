@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import type { CSSProperties } from 'react'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Bookmark, Building2, Camera, CheckCircle2, Clock3, Download, ExternalLink, FileText, Globe2, Mail, MapPin, MessageCircle, Phone, ShieldCheck, Tag, UserRound, Zap } from 'lucide-react'
+import { ArrowLeft, Bookmark, Building2, Camera, CheckCircle2, Download, ExternalLink, FileText, Globe2, Mail, MapPin, MessageCircle, Phone, Tag, UserRound } from 'lucide-react'
 import { buildPostMetadata, buildTaskMetadata } from '@/lib/seo'
 import { buildPostUrl, fetchArticleComments, fetchTaskPostBySlug, fetchTaskPosts } from '@/lib/task-data'
-import { getTaskConfig, type TaskKey } from '@/lib/site-config'
+import { getTaskConfig, SITE_CONFIG, type TaskKey } from '@/lib/site-config'
 import type { SitePost } from '@/lib/site-connector'
 import { EditableSiteShell } from '@/editable/shell/EditableSiteShell'
 import { getVisualPreset, visualSystem } from '@/editable/theme/visual-system'
@@ -54,9 +54,43 @@ const getBody = (post: SitePost) => {
   return asText(content.body) || asText(content.description) || asText(content.details) || post.summary || 'Details will appear here once available.'
 }
 
+const escapeHtml = (value: string) => value
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;')
+
+const safeUrl = (value: string) => /^https?:\/\//i.test(value) ? value : '#'
+
+const linkifyMarkdown = (value: string) => value
+  .replace(/\[([^\]]+)]\((https?:\/\/[^\s)]+)\)/gi, (_match, label, url) => `<a href="${safeUrl(url)}" target="_blank" rel="nofollow noopener noreferrer">${label}</a>`)
+
+const linkifyText = (value: string) => linkifyMarkdown(value)
+  .replace(/(^|[\s(>])((https?:\/\/)[^\s<)]+)/gi, (_match, prefix, url) => `${prefix}<a href="${safeUrl(url)}" target="_blank" rel="nofollow noopener noreferrer">${url}</a>`)
+
+const hardenLinks = (html: string) => html.replace(/<a\s+([^>]*href=["'][^"']+["'][^>]*)>/gi, (_match, attrs) => {
+  let next = String(attrs).replace(/\s+on\w+=("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+  if (!/\starget=/i.test(next)) next += ' target="_blank"'
+  if (!/\srel=/i.test(next)) next += ' rel="nofollow noopener noreferrer"'
+  return `<a ${next}>`
+})
+
+const sanitizeHtml = (html: string) => hardenLinks(html
+  .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+  .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+  .replace(/<(iframe|object|embed)[^>]*>[\s\S]*?<\/\1>/gi, '')
+  .replace(/\s+on\w+=("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+  .replace(/(href|src)=(['"])javascript:[\s\S]*?\2/gi, '$1="#"'))
+
 const formatPlainText = (raw: string) => {
-  if (/<[a-z][\s\S]*>/i.test(raw)) return raw.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-  return raw.split(/\n{2,}/).map((part) => `<p>${part.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`).join('')
+  const value = raw.trim()
+  if (!value) return ''
+  if (/<[a-z][\s\S]*>/i.test(value)) return sanitizeHtml(linkifyMarkdown(value))
+  return value
+    .split(/\n{2,}/)
+    .map((part) => `<p>${linkifyText(escapeHtml(part).replace(/\n/g, '<br />'))}</p>`)
+    .join('')
 }
 
 const summaryText = (post: SitePost) => post.summary || asText(getContent(post).description) || asText(getContent(post).excerpt) || ''
@@ -161,67 +195,27 @@ function ClassifiedDetail({ post, related }: { post: SitePost; related: SitePost
   const email = getField(post, ['email'])
   const website = getField(post, ['website', 'url'])
   return (
-    <section className="bg-[#f4f0e8]">
-      <div className="mx-auto grid max-w-[var(--editable-container)] gap-7 px-4 py-10 sm:px-6 lg:grid-cols-[420px_minmax(0,1fr)] lg:px-8 lg:py-16">
-        <aside className="overflow-hidden rounded-[2rem] border border-black/10 bg-[#111820] text-white shadow-[0_28px_90px_rgba(17,24,32,0.2)] lg:sticky lg:top-24 lg:self-start">
-          <div className="h-2 bg-[linear-gradient(90deg,#ff3b18,#ff9d00,#0ba7ff)]" />
-          <div className="p-6 sm:p-7">
-            <BackLink task="classified" />
-            <p className="mt-9 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#9edcff]">
-              <Zap className="h-4 w-4" />
-              Classified board
-            </p>
-            <h1 className="mt-5 text-4xl font-black leading-[0.95] tracking-[-0.07em] sm:text-5xl">{post.title}</h1>
-
-            <div className="mt-7 grid gap-3">
-              {price ? <ClassifiedFact label="Price" value={price} icon={Tag} /> : null}
-              {condition ? <ClassifiedFact label="Condition" value={condition} icon={ShieldCheck} /> : null}
-              {location ? <ClassifiedFact label="Location" value={location} icon={MapPin} /> : null}
-              {!price && !condition && !location ? <ClassifiedFact label="Status" value="Details inside" icon={Clock3} /> : null}
-            </div>
-
-            <div className="mt-7 rounded-2xl border border-white/10 bg-white/[0.06] p-4">
-              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-white/58">
-                <CheckCircle2 className="h-4 w-4 text-[#ff9d00]" />
-                Buyer note
-              </div>
-              <p className="mt-3 text-sm leading-7 text-white/70">Check the details, compare the images, then contact the poster from the quick actions below.</p>
-            </div>
-
-            <div className="mt-7 flex flex-wrap gap-3">
-              {phone ? <a href={`tel:${phone}`} className="rounded-full bg-white px-5 py-3 text-sm font-black text-[#111820]">Call now</a> : null}
-              {email ? <a href={`mailto:${email}`} className="rounded-full border border-white/25 px-5 py-3 text-sm font-black">Email</a> : null}
-              {website ? <Link href={website} target="_blank" rel="noreferrer" className="rounded-full border border-white/25 px-5 py-3 text-sm font-black">Website</Link> : null}
-            </div>
-          </div>
-        </aside>
-
-        <article className="min-w-0 space-y-6">
-          {images.length ? (
-            <section className="overflow-hidden rounded-[2rem] border border-black/10 bg-white shadow-sm">
-              <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
-                <img src={images[0]} alt="" className="h-full min-h-[360px] w-full object-cover" />
-                <div className="grid grid-cols-2 gap-2 bg-[#111820] p-3">
-                  {images.slice(1, 5).map((image, index) => (
-                    <img key={`${image}-${index}`} src={image} alt="" className="aspect-square rounded-2xl object-cover ring-1 ring-white/10" />
-                  ))}
-                  {images.length === 1 ? (
-                    <div className="col-span-2 flex min-h-40 items-center justify-center rounded-2xl border border-dashed border-white/15 text-sm font-black uppercase tracking-[0.16em] text-white/42">Single image offer</div>
-                  ) : null}
-                </div>
-              </div>
-            </section>
-          ) : null}
-
-          <section className="rounded-[2rem] border border-black/10 bg-white p-6 shadow-sm sm:p-8">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#c55a2e]">Offer details</p>
-            <BodyContent post={post} />
-            <ContactAction website={website} phone={phone} email={email} />
-          </section>
-
-          <RelatedPanel task="classified" post={post} related={related} />
-        </article>
-      </div>
+    <section className="mx-auto grid max-w-[var(--editable-container)] gap-7 px-4 py-10 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8 lg:py-16">
+      <aside className="rounded-[2.5rem] border border-[var(--editable-border)] bg-[var(--detail-text)] p-7 text-[var(--detail-bg)] shadow-xl lg:sticky lg:top-24 lg:self-start">
+        <BackLink task="classified" />
+        <p className="mt-10 text-xs font-black uppercase tracking-[0.28em] opacity-60">Classified notice</p>
+        <h1 className="mt-4 text-4xl font-black leading-[0.98] tracking-[-0.07em] sm:text-5xl">{post.title}</h1>
+        <div className="mt-8 grid gap-3">
+          {price ? <BadgeLine label="Price" value={price} /> : null}
+          {condition ? <BadgeLine label="Condition" value={condition} /> : null}
+          {location ? <BadgeLine label="Location" value={location} /> : null}
+        </div>
+        <div className="mt-8 flex flex-wrap gap-3">
+          {phone ? <a href={`tel:${phone}`} className="rounded-full bg-[var(--detail-bg)] px-5 py-3 text-sm font-black text-[var(--detail-text)]">Call now</a> : null}
+          {email ? <a href={`mailto:${email}`} className="rounded-full border border-white/25 px-5 py-3 text-sm font-black">Email</a> : null}
+        </div>
+      </aside>
+      <article className="rounded-[2.7rem] border border-[var(--editable-border)] bg-white p-6 shadow-[0_30px_90px_rgba(15,23,42,0.08)] sm:p-9">
+        <ImageStrip images={images} label="Offer images" large />
+        <BodyContent post={post} />
+        <ContactAction website={website} phone={phone} email={email} />
+        <RelatedPanel task="classified" post={post} related={related} />
+      </article>
     </section>
   )
 }
@@ -377,23 +371,24 @@ function ContactAction({ website, phone, email }: { website?: string; phone?: st
   )
 }
 
-function ClassifiedFact({ label, value, icon: Icon }: { label: string; value: string; icon: typeof MapPin }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-4">
-      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-white/52">
-        <Icon className="h-4 w-4 text-[#ff9d00]" />
-        {label}
-      </div>
-      <p className="mt-2 break-words text-lg font-black leading-6">{value}</p>
-    </div>
-  )
+function BadgeLine({ label, value }: { label: string; value: string }) {
+  return <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm"><span className="font-black uppercase tracking-[0.16em] opacity-60">{label}</span><span className="font-black">{value}</span></div>
 }
 
-function RelatedPanel({ task, related }: { task: TaskKey; post: SitePost; related: SitePost[]; compact?: boolean }) {
+function RelatedPanel({ task, post, related, compact = false }: { task: TaskKey; post: SitePost; related: SitePost[]; compact?: boolean }) {
   const taskConfig = getTaskConfig(task)
   return (
     <aside className="min-w-0 space-y-5">
-   
+      {!compact ? (
+        <div className="rounded-[2rem] border border-[var(--editable-border)] bg-white/70 p-5 backdrop-blur">
+          <p className="text-xs font-black uppercase tracking-[0.22em] opacity-55">About this post</p>
+          <div className="mt-4 grid gap-3 text-sm font-bold opacity-75">
+            <p className="inline-flex items-center gap-2"><Tag className="h-4 w-4" /> Task: {taskConfig?.label || task}</p>
+            <p className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Site: {SITE_CONFIG.name}</p>
+            {post.publishedAt ? <p>Published: {new Date(post.publishedAt).toLocaleDateString()}</p> : null}
+          </div>
+        </div>
+      ) : null}
       {related.length ? (
         <div className="rounded-[2rem] border border-[var(--editable-border)] bg-white/70 p-5 backdrop-blur">
           <div className="flex items-center justify-between gap-3">
