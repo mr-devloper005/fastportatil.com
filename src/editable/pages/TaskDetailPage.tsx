@@ -95,12 +95,21 @@ const decodeEntities = (value: string) => value
   .replace(/&#x([0-9a-f]+);/gi, (_m, code) => String.fromCharCode(parseInt(code, 16)))
 
 const looksLikeHtml = (value: string) => /<\/?[a-z][\s\S]*?>/i.test(value)
-const looksLikeEncodedHtml = (value: string) => /&lt;\/?[a-z][\s\S]*?&gt;/i.test(value)
+
+const decodeUntilStable = (value: string, maxIterations = 5) => {
+  let current = value
+  for (let i = 0; i < maxIterations; i++) {
+    const decoded = decodeEntities(current)
+    if (decoded === current) break
+    current = decoded
+  }
+  return current
+}
 
 const formatPlainText = (raw: string) => {
   let value = raw.trim()
   if (!value) return ''
-  if (!looksLikeHtml(value) && looksLikeEncodedHtml(value)) value = decodeEntities(value)
+  if (!looksLikeHtml(value)) value = decodeUntilStable(value)
   if (looksLikeHtml(value)) return sanitizeHtml(linkifyMarkdown(value))
   return value
     .split(/\n{2,}/)
