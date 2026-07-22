@@ -3,6 +3,7 @@ import { ArrowRight, Globe, Mail, MapPin, Phone, ShieldCheck, Tag } from 'lucide
 import { ContentImage } from '@/components/shared/content-image'
 import { SchemaJsonLd } from '@/components/seo/schema-jsonld'
 import { TaskPostCard } from '@/components/shared/task-post-card'
+import { RichContent, formatRichHtml } from '@/components/shared/rich-content'
 import type { SitePost } from '@/lib/site-connector'
 import type { TaskKey } from '@/lib/site-config'
 
@@ -73,7 +74,7 @@ export function DirectoryTaskDetailPage({
             <div className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-7 shadow-[0_20px_60px_rgba(15,23,42,0.06)]">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">About this {task}</p>
               <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em]">Structured details instead of a generic content block.</h2>
-              <p className="mt-4 text-sm leading-8 text-slate-600">{description}</p>
+              <RichContent html={formatRichHtml(description)} className="mt-4 text-sm leading-8 text-slate-600" />
               {highlights.length ? (
                 <div className="mt-6 grid gap-3 md:grid-cols-2">
                   {highlights.slice(0, 4).map((item) => (
