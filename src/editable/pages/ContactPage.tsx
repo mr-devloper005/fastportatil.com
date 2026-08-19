@@ -37,12 +37,12 @@ export default function ContactPage() {
 
   return (
     <EditableSiteShell>
-      <main className="bg-[#f4f7f6] text-[#111820]">
+      <main className="bg-[#f5f5f5] text-[#111820]">
         <section className="mx-auto grid max-w-[1480px] gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:px-8 lg:py-14">
           <div className="relative overflow-hidden rounded-[2rem] bg-[#111820] p-6 text-white shadow-[0_24px_80px_rgba(17,24,32,0.18)] sm:p-8 lg:p-10">
             <div className="absolute inset-x-0 top-0 h-2 bg-[linear-gradient(90deg,#ff3b18,#ff9d00,#0ba7ff)]" />
             <div className="flex items-center justify-between gap-4">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#9edcff]">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#e9efff]">
                 <Zap className="h-4 w-4" />
                 {pagesContent.contact.eyebrow}
               </span>
@@ -63,7 +63,7 @@ export default function ContactPage() {
                 { icon: ArrowRight, label: 'Clear', text: 'next steps' },
               ].map((item) => (
                 <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.07] p-4">
-                  <item.icon className="h-5 w-5 text-[#ff9d00]" />
+                  <item.icon className="h-5 w-5 text-[#3665f3]" />
                   <p className="mt-3 text-2xl font-black tracking-[-0.04em]">{item.label}</p>
                   <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-white/52">{item.text}</p>
                 </div>
@@ -73,7 +73,7 @@ export default function ContactPage() {
 
           <div className="grid gap-6">
             <div className="rounded-[2rem] border border-black/10 bg-white p-5 shadow-sm sm:p-6">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#ff5a1f]">Message desk</p>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#3665f3]">Message desk</p>
               <h2 className="mt-2 text-3xl font-black tracking-[-0.05em]">{pagesContent.contact.formTitle}</h2>
               <div className="mt-5">
                 <EditableContactLeadForm />
@@ -83,11 +83,11 @@ export default function ContactPage() {
             <div className="grid gap-4 md:grid-cols-3">
               {cards.map((lane) => (
                 <div key={lane.title} className="rounded-[1.5rem] border border-black/10 bg-white p-5 shadow-sm">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eaf5ff] text-[#0b69a3]">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#e9efff] text-[#3665f3]">
                     <lane.icon className="h-5 w-5" />
                   </span>
                   <h3 className="mt-4 text-lg font-black tracking-[-0.03em]">{lane.title}</h3>
-                  <p className="mt-2 text-sm leading-7 text-[#52606d]">{lane.body}</p>
+                  <p className="mt-2 text-sm leading-7 text-[#5a6472]">{lane.body}</p>
                 </div>
               ))}
             </div>
