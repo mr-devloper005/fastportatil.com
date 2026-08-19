@@ -39,7 +39,11 @@ const getImages = (post: SitePost) => {
 const placeholder = '/placeholder.svg?height=900&width=1200'
 const getImage = (post: SitePost) => getImages(post)[0] || placeholder
 const getCategory = (post: SitePost, fallback: string) => asText(getContent(post).category) || post.tags?.[0] || fallback
-const getSummary = (post: SitePost) => post.summary || asText(getContent(post).description) || asText(getContent(post).excerpt) || asText(getContent(post).body)
+const stripTags = (value: string) => value
+  .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+  .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+  .replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+const getSummary = (post: SitePost) => stripTags(post.summary || asText(getContent(post).description) || asText(getContent(post).excerpt) || asText(getContent(post).body))
 const getField = (post: SitePost, keys: string[]) => {
   const content = getContent(post)
   for (const key of keys) {
@@ -101,9 +105,9 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
       <main style={archiveVars} className="bg-[var(--archive-bg)] text-[var(--archive-text)]">
         <section className={isClassified ? 'bg-[#111820] text-white' : ''}>
           <div className={`mx-auto grid max-w-[var(--editable-container)] gap-8 px-4 py-12 sm:px-6 lg:px-8 ${isClassified ? 'lg:grid-cols-[1fr_380px] lg:py-16' : 'lg:grid-cols-[1.05fr_0.95fr] lg:py-20'}`}>
-            <div className={isClassified ? 'relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#18212b] p-7 shadow-[0_28px_90px_rgba(0,0,0,0.22)] sm:p-10' : 'rounded-[2.5rem] border border-[var(--editable-border)] bg-[var(--archive-surface)] p-7 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-10'}>
+            <div className={isClassified ? 'relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#111820] p-7 shadow-[0_28px_90px_rgba(15,23,42,0.22)] sm:p-10' : 'rounded-[2.5rem] border border-[var(--editable-border)] bg-[var(--archive-surface)] p-7 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-10'}>
               {isClassified ? <div className="absolute inset-x-0 top-0 h-2 bg-[linear-gradient(90deg,#ff3b18,#ff9d00,#0ba7ff)]" /> : null}
-              <div className={isClassified ? 'inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[#9edcff]' : 'inline-flex items-center gap-2 rounded-full border border-[var(--editable-border)] bg-white/70 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[var(--archive-accent)]'}><Icon className="h-4 w-4" /> {label}</div>
+              <div className={isClassified ? 'inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[#e9efff]' : 'inline-flex items-center gap-2 rounded-full border border-[var(--editable-border)] bg-white/70 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[var(--archive-accent)]'}><Icon className="h-4 w-4" /> {label}</div>
               <h1 className={`mt-5 max-w-4xl font-black leading-[0.95] tracking-[-0.07em] ${isClassified ? 'text-5xl sm:text-7xl' : 'text-5xl sm:text-6xl'}`}>{isClassified ? 'Deals, notices, and quick offers in motion.' : voice?.headline || `Browse ${label}`}</h1>
               <p className={`mt-6 max-w-2xl text-base leading-8 ${isClassified ? 'text-white/70' : 'opacity-70'}`}>{voice?.description || SITE_CONFIG.description}</p>
               {isClassified ? (
@@ -114,7 +118,7 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
                     { icon: Clock3, label: 'Fresh intent' },
                   ].map((item) => (
                     <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.07] p-4">
-                      <item.icon className="h-5 w-5 text-[#ff9d00]" />
+                      <item.icon className="h-5 w-5 text-[#3665f3]" />
                       <p className="mt-3 text-sm font-black uppercase tracking-[0.16em] text-white/72">{item.label}</p>
                     </div>
                   ))}
@@ -128,7 +132,7 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
               </div>
             </div>
 
-            <form action={basePath} className={isClassified ? 'self-end rounded-[2rem] border border-white/10 bg-white p-5 text-[#111820] shadow-[0_24px_70px_rgba(0,0,0,0.16)]' : 'self-end rounded-[2rem] border border-[var(--editable-border)] bg-white/70 p-5 shadow-sm backdrop-blur'}>
+            <form action={basePath} className={isClassified ? 'self-end rounded-[2rem] border border-white/10 bg-white p-5 text-[#111820] shadow-[0_24px_70px_rgba(15,23,42,0.16)]' : 'self-end rounded-[2rem] border border-[var(--editable-border)] bg-white/70 p-5 shadow-sm backdrop-blur'}>
               <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] opacity-55"><Filter className="h-4 w-4" /> Filter</div>
               <select name="category" defaultValue={category} className="mt-4 h-12 w-full rounded-2xl border border-[var(--editable-border)] bg-white px-4 text-sm font-bold outline-none">
                 <option value="all">All categories</option>
@@ -225,7 +229,7 @@ function ClassifiedArchiveCard({ post, href }: { post: SitePost; href: string })
   const location = getField(post, ['location', 'address', 'city'])
   const condition = getField(post, ['condition', 'type', 'availability'])
   return (
-    <Link href={href} className="group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-black/10 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(17,24,32,0.12)]">
+    <Link href={href} className="group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-black/[0.08] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(17,24,32,0.12)]">
       <div className="relative aspect-[16/11] overflow-hidden bg-[#111820]">
         <div className="absolute inset-x-0 top-0 z-10 h-1.5 bg-[linear-gradient(90deg,#ff3b18,#ff9d00,#0ba7ff)]" />
         {image ? (
@@ -237,7 +241,7 @@ function ClassifiedArchiveCard({ post, href }: { post: SitePost; href: string })
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#111820] via-[#111820]/20 to-transparent" />
         <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#111820]">
-          <CheckCircle2 className="h-3 w-3 text-[#c55a2e]" />
+          <CheckCircle2 className="h-3 w-3 text-[#3665f3]" />
           Classified
         </span>
         <div className="absolute bottom-4 left-4 right-4">
@@ -246,14 +250,14 @@ function ClassifiedArchiveCard({ post, href }: { post: SitePost; href: string })
         </div>
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <h2 className="line-clamp-2 text-xl font-black leading-tight tracking-[-0.045em] text-[#1f1714]">{post.title}</h2>
-        <p className="mt-3 line-clamp-3 text-sm leading-6 text-[#695f5a]">{getSummary(post)}</p>
+        <h2 className="line-clamp-2 text-xl font-black leading-tight tracking-[-0.045em] text-[#111820]">{post.title}</h2>
+        <p className="mt-3 line-clamp-3 text-sm leading-6 text-[#5a6472]">{getSummary(post)}</p>
         <div className="mt-5 flex flex-wrap gap-2">
-          {location ? <span className="rounded-full bg-[#f4f0e8] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#4f4039]">{location}</span> : null}
-          {condition ? <span className="rounded-full bg-[#f4f0e8] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#4f4039]">{condition}</span> : null}
-          {!location && !condition ? <span className="rounded-full bg-[#f4f0e8] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#4f4039]">Details inside</span> : null}
+          {location ? <span className="rounded-full bg-[#f0f0f0] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#5a6472]">{location}</span> : null}
+          {condition ? <span className="rounded-full bg-[#f0f0f0] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#5a6472]">{condition}</span> : null}
+          {!location && !condition ? <span className="rounded-full bg-[#f0f0f0] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#5a6472]">Details inside</span> : null}
         </div>
-        <p className="mt-auto pt-5 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-[#c55a2e]">View listing <ArrowRight className="h-4 w-4" /></p>
+        <p className="mt-auto pt-5 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-[#3665f3]">View listing <ArrowRight className="h-4 w-4" /></p>
       </div>
     </Link>
   )
